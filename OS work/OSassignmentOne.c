@@ -9,6 +9,12 @@ char *usefulWords[999];
 
 
 
+
+
+void headerMaker(char **wordList);
+
+
+
 void main()
 {
 
@@ -20,7 +26,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set1_process.in", "r");
+    FILE *finput = fopen("set2_process.in", "r");
 
     //file exception catch
     if(finput==NULL)
@@ -59,8 +65,63 @@ void main()
         }
     }
 
+    headerMaker(keyword);
+
 
     fclose(finput);
 
     return;
 }
+
+
+
+//making a heading function since process count, method, and possible quantum are pretty universal on the outputs
+void headerMaker(char **wordList)
+{
+
+    int processHelper;
+    int quantumHelper;
+
+
+    processHelper = atoi(wordList[1]);
+
+
+        printf("\n\n\n");
+        printf("Below will print to file\n");
+        printf("=======================================\n\n");
+        printf("%d processes \n", processHelper);
+            if(strcmp(wordList[5], "rr")==0)
+            {
+                printf("using Round-Robin\n");
+
+                quantumHelper = atoi(wordList[7]);
+                printf("Quantum %d \n", quantumHelper);
+
+            }
+            else if(strcmp(wordList[5], "fcfs")==0)
+            {
+
+                printf("using First Come First Serve\n");
+            }
+
+            else if(strcmp(wordList[5], "sjf")==0)
+            {
+                printf("using Shortest Job First\n");
+            }
+
+
+
+
+    return;
+
+}
+
+
+
+
+
+
+
+
+
+
