@@ -5,13 +5,19 @@
 
 
 
-char *usefulWords[999];
+typedef struct node{
+char processNumber[20];
+int arrivalTime;
+int burstTime;
+struct node *next;
+}listNode;
 
 
 
 
 
 void headerMaker(char **wordList);
+//void roundRobin(char **keyWord);
 
 
 
@@ -68,6 +74,12 @@ void main()
     headerMaker(keyword);
 
 
+    if(strcmp(keyword[5], "rr")==0)
+    {
+        roundRobin(keyword);
+    }
+
+
     fclose(finput);
 
     return;
@@ -115,6 +127,66 @@ void headerMaker(char **wordList)
     return;
 
 }
+
+
+
+
+
+//let's get some red robin's, I mean round robin going
+void roundRobin(char **keyWord)
+{
+    int processCount;
+    int runTime;
+    int quantum;
+
+
+    //linked lists are so much fun to make in c, let's build one
+    listNode *root;
+    root = (struct node *) malloc(sizeof(struct node));
+    root=NULL;
+
+    //temp->next=NULL;
+
+    processCount = atoi(keyWord[1]);
+    runTime = atoi(keyWord[3]);
+    quantum = atoi(keyWord[7]);
+
+    //populate the list based on our amount of processes
+    for(int i=0; i<processCount; i++)
+    {
+        listNode *temp;
+        temp = (struct node *) malloc(sizeof(struct node));
+
+        strcpy(temp->processNumber,keyWord[(i*7)+10]);
+        temp->arrivalTime = atoi(keyWord[(i*7)+12]);
+        temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->next= root;
+        root=temp;
+    }
+
+
+    listNode *temp;
+    temp = (struct node *) malloc(sizeof(struct node));
+
+
+    //testing to see if we populated it correctly
+    //delete this later or this will never work!!!
+    printf("===========here's the contents of the linked list==========");
+    temp = root;
+    while(temp!=NULL)
+    {
+        printf("\n");
+        printf("process name: %s \n", temp->processNumber);
+        printf("arrival time: %d \n", temp->arrivalTime);
+        printf("burst time: %d \n", temp->burstTime);
+        temp=temp->next;
+    }
+
+}
+
+
+
+
 
 
 
