@@ -32,7 +32,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set4_process.in", "r");
+    FILE *finput = fopen("set3_process.in", "r");
 
     //file exception catch
     if(finput==NULL)
@@ -77,10 +77,6 @@ void main()
     if(strcmp(keyword[5], "rr")==0)
     {
         roundRobin(keyword);
-    }
-    if(strcmp(keyword[5], "sjf")==0)
-    {
-        shortestJobFirst(keyword);
     }
 
 
@@ -396,7 +392,7 @@ void shortestJobFirst(char** keyWord)
 
 
     temp=root;
-    sortListByBurstTime(temp);
+    sortListByArrivalTime(temp);
     root=temp;
 
     printf("===========here's the contents of the linked list after a sort==========");
