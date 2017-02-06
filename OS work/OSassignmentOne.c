@@ -32,7 +32,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set3_process.in", "r");
+    FILE *finput = fopen("set4_process.in", "r");
 
     //file exception catch
     if(finput==NULL)
@@ -60,10 +60,10 @@ void main()
             while(helper!= NULL)
             {
 
-            printf("flag value is %d \n", flag);
+            //printf("flag value is %d \n", flag);
             keyword[flag] = malloc(50 *sizeof(char));
             strcpy(keyword[flag],helper);
-            printf("Got the current token as: %s \n", keyword[flag]);
+            //printf("Got the current token as: %s \n", keyword[flag]);
             flag++;
 
             helper = strtok(NULL, " ");
@@ -77,6 +77,10 @@ void main()
     if(strcmp(keyword[5], "rr")==0)
     {
         roundRobin(keyword);
+    }
+    if(strcmp(keyword[5], "sjf")==0)
+    {
+        shortestJobFirst(keyword);
     }
 
 
@@ -392,7 +396,7 @@ void shortestJobFirst(char** keyWord)
 
 
     temp=root;
-    sortListByArrivalTime(temp);
+    sortListByBurstTime(temp);
     root=temp;
 
     printf("===========here's the contents of the linked list after a sort==========");
