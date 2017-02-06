@@ -32,7 +32,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set2_process.in", "r");
+    FILE *finput = fopen("set4_process.in", "r");
 
     //file exception catch
     if(finput==NULL)
@@ -77,6 +77,10 @@ void main()
     if(strcmp(keyword[5], "rr")==0)
     {
         roundRobin(keyword);
+    }
+    if(strcmp(keyword[5], "sjf")==0)
+    {
+        shortestJobFirst(keyword);
     }
 
 
@@ -152,7 +156,7 @@ void roundRobin(char **keyWord)
     quantum = atoi(keyWord[7]);
 
     //populate the list based on our amount of processes
-    for(int i=0; i<processCount; i++)
+;    for(int i=0; i<processCount; i++)
     {
         listNode *temp;
         temp = (struct node *) malloc(sizeof(struct node));
@@ -341,6 +345,72 @@ void roundRobin(char **keyWord)
 
 }
 
+void shortestJobFirst(char** keyWord)
+{
+    int processCount;
+    int runTime;
+    int quantum;
+
+
+    //linked lists are so much fun to make in c, let's build one
+    listNode *root;
+    root = (struct node *) malloc(sizeof(struct node));
+    root=NULL;
+
+    //temp->next=NULL;
+
+    processCount = atoi(keyWord[1]);
+    runTime = atoi(keyWord[3]);
+    quantum = atoi(keyWord[7]);
+
+    //populate the list based on our amount of processes
+    for(int i=0; i<processCount; i++)
+    {
+        listNode *temp;
+        temp = (struct node *) malloc(sizeof(struct node));
+
+        strcpy(temp->processNumber,keyWord[(i*7)+10]);
+        temp->arrivalTime = atoi(keyWord[(i*7)+12]);
+        temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->next= root;
+        root=temp;
+    }
+
+
+    listNode *temp;
+    temp = (struct node *) malloc(sizeof(struct node));
+
+
+
+    printf("===========here's the contents of the linked list==========");
+    temp = root;
+    while(temp!=NULL)
+    {
+        printf("\n");
+        printf("process name: %s \n", temp->processNumber);
+        printf("arrival time: %d \n", temp->arrivalTime);
+        printf("burst time: %d \n", temp->burstTime);
+        temp=temp->next;
+    }
+
+
+
+    temp=root;
+    sortListByBurstTime(temp);
+    root=temp;
+
+    printf("===========here's the contents of the linked list after a sort==========");
+    while(temp!=NULL)
+    {
+        printf("\n");
+        printf("process name: %s \n", temp->processNumber);
+        printf("arrival time: %d \n", temp->arrivalTime);
+        printf("burst time: %d \n", temp->burstTime);
+        temp=temp->next;
+    }
+
+}
+
 
 
 void sortListByArrivalTime(struct node *temp)
@@ -367,6 +437,58 @@ void sortListByArrivalTime(struct node *temp)
         {
 
             if(root->arrivalTime>root->next->arrivalTime)
+            {
+
+                //let's just switch the data instead of the actual
+                //nodes and save a big headache here
+                helper->arrivalTime=root->arrivalTime;
+                helper->burstTime= root->burstTime;
+                strcpy(helper->processNumber, root->processNumber);
+
+
+                root->arrivalTime=root->next->arrivalTime;
+                root->burstTime=root->next->burstTime;
+                strcpy(root->processNumber,root->next->processNumber);
+
+                root->next->arrivalTime=helper->arrivalTime;
+                root->next->burstTime=helper->burstTime;
+                strcpy(root->next->processNumber,helper->processNumber);
+
+                switchFlag=1;
+            }
+
+            root=root->next;
+        }
+
+
+    }
+
+}
+
+void sortListByBurstTime(struct node *temp)
+{
+    int switchFlag, i;
+    struct node *helper= NULL;
+    struct node *helperTwo = NULL;
+    struct node *root = temp;
+
+    helper = (struct node *) malloc(sizeof(struct node));
+
+    if(root==NULL)
+    {
+        return;
+    }
+
+    switchFlag=1;
+
+    while(switchFlag!=0)
+    {
+        switchFlag=0;
+        root=temp;
+        while(root->next!=NULL)
+        {
+
+            if(root->burstTime > root->next->burstTime)
             {
 
                 //let's just switch the data instead of the actual
