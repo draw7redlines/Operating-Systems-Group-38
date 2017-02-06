@@ -32,7 +32,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set4_process.in", "r");
+    FILE *finput = fopen("set3_process.in", "r");
 
     //file exception catch
     if(finput==NULL)
@@ -396,7 +396,7 @@ void shortestJobFirst(char** keyWord)
 
 
     temp=root;
-    sortListByBurstTime(temp);
+    sortListByArrivalTime(temp);
     root=temp;
 
     printf("===========here's the contents of the linked list after a sort==========");
@@ -407,6 +407,42 @@ void shortestJobFirst(char** keyWord)
         printf("arrival time: %d \n", temp->arrivalTime);
         printf("burst time: %d \n", temp->burstTime);
         temp=temp->next;
+    }
+
+    int time = 0;
+    int idleCheck = 0;
+    int i;
+
+
+    while(time < runTime)
+    {
+        //Arrival condition
+        temp = root;
+
+        for(i = 0; i < processCount; i++)
+        {
+            if(temp->arrivalTime == time)
+            {
+                printf("Time %d: %s Arrived\n",time ,temp->processNumber);
+                idleCheck++;
+
+                temp = temp->next;
+            }
+        }
+
+
+        temp = root;
+        if(temp->burstTime == 0)
+        {
+            printf("Time %d: %s finished\n",time ,temp->processNumber);
+
+            if(temp->next != NULL)
+                temp = temp->next;
+        }
+
+
+
+        time++;
     }
 
 }
