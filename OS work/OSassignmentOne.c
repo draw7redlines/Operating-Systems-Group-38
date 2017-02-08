@@ -18,7 +18,7 @@ struct node *next;
 
 void headerMaker(char **wordList);
 //void roundRobin(char **keyWord);
-
+void firstComeFirstServed(char **keyWord);
 
 
 void main()
@@ -77,6 +77,11 @@ void main()
     if(strcmp(keyword[5], "rr")==0)
     {
         roundRobin(keyword);
+    }
+
+    if(strcmp(keyword[5], "fcfs")==0)
+    {
+        firstComeFirstServed(keyword);
     }
 
 
@@ -138,6 +143,7 @@ void roundRobin(char **keyWord)
     int processCount;
     int runTime;
     int quantum;
+    int i;
 
 
     //linked lists are so much fun to make in c, let's build one
@@ -152,7 +158,7 @@ void roundRobin(char **keyWord)
     quantum = atoi(keyWord[7]);
 
     //populate the list based on our amount of processes
-    for(int i=0; i<processCount; i++)
+    for(i=0; i<processCount; i++)
     {
         listNode *temp;
         temp = (struct node *) malloc(sizeof(struct node));
@@ -220,7 +226,7 @@ void roundRobin(char **keyWord)
         //process arrives, which oversteps standard quantum rules and
         //makes a report no matter what
         temp=root;
-        for(int i=0; i<processCount; i++)
+        for(i=0; i<processCount; i++)
         {
             if(temp->arrivalTime==time)
             {
@@ -240,7 +246,7 @@ void roundRobin(char **keyWord)
         //process finishes, which oversteps quantum rules and makes
         //a report no matter what
         temp=root;
-        for(int i=0; i<processCount; i++)
+        for(i=0; i<processCount; i++)
         {
             if(temp->burstTime==0)
             {
@@ -261,7 +267,7 @@ void roundRobin(char **keyWord)
         // without exceeding max process number
         temp=root;
         int instance = 1;
-        for(int i=0; i<processCount; i++)
+        for(i=0; i<processCount; i++)
         {
             if(instance<currentProc&&temp->burstTime!=-1)
             {
@@ -325,7 +331,7 @@ void roundRobin(char **keyWord)
 
         //we're done
         temp=root;
-        for(int i=0; i<processCount; i++)
+        for(i=0; i<processCount; i++)
         {
             if(temp->burstTime!=-1)
                 gameOver=0;
@@ -395,7 +401,70 @@ void sortListByArrivalTime(struct node *temp)
 
 }
 
+// I guess you could say it came first
+void firstComeFirstServed(char **keyWord)
+{
+    int processCount;
+    int runTime;
+    int i;
 
+
+    //linked lists are so much fun to make in c, let's build one
+    listNode *root;
+    root = (struct node *) malloc(sizeof(struct node));
+    root=NULL;
+
+    //temp->next=NULL;
+
+    processCount = atoi(keyWord[1]);
+    runTime = atoi(keyWord[3]);
+
+    //populate the list based on our amount of processes
+    for(i=0; i<processCount; i++)
+    {
+        listNode *temp;
+        temp = (struct node *) malloc(sizeof(struct node));
+
+        strcpy(temp->processNumber,keyWord[(i*7)+10]);
+        temp->arrivalTime = atoi(keyWord[(i*7)+12]);
+        temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->next= root;
+        root=temp;
+    }
+
+
+    listNode *temp;
+    temp = (struct node *) malloc(sizeof(struct node));
+
+
+
+    printf("===========here's the contents of the linked list==========");
+    temp = root;
+    while(temp!=NULL)
+    {
+        printf("\n");
+        printf("process name: %s \n", temp->processNumber);
+        printf("arrival time: %d \n", temp->arrivalTime);
+        printf("burst time: %d \n", temp->burstTime);
+        temp=temp->next;
+    }
+
+
+
+    temp=root;
+    sortListByArrivalTime(temp);
+    root=temp;
+
+    printf("===========here's the contents of the linked list after a sort==========");
+    while(temp!=NULL)
+    {
+        printf("\n");
+        printf("process name: %s \n", temp->processNumber);
+        printf("arrival time: %d \n", temp->arrivalTime);
+        printf("burst time: %d \n", temp->burstTime);
+        temp=temp->next;
+    }
+}
 
 
 
