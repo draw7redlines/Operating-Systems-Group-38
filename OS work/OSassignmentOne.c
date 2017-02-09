@@ -10,6 +10,9 @@ char processNumber[20];
 int arrivalTime;
 int burstTime;
 struct node *next;
+int serialNum;
+int finishTime;
+int originalBurst;
 }listNode;
 
 
@@ -138,6 +141,7 @@ void roundRobin(char **keyWord)
     int processCount;
     int runTime;
     int quantum;
+    int serialTrack =0;
 
 
     //linked lists are so much fun to make in c, let's build one
@@ -145,14 +149,14 @@ void roundRobin(char **keyWord)
     root = (struct node *) malloc(sizeof(struct node));
     root=NULL;
 
-    //temp->next=NULL;
 
     processCount = atoi(keyWord[1]);
     runTime = atoi(keyWord[3]);
     quantum = atoi(keyWord[7]);
 
     //populate the list based on our amount of processes
-    for(int i=0; i<processCount; i++)
+    int i;
+    for(i=0; i<processCount; i++)
     {
         listNode *temp;
         temp = (struct node *) malloc(sizeof(struct node));
@@ -160,8 +164,11 @@ void roundRobin(char **keyWord)
         strcpy(temp->processNumber,keyWord[(i*7)+10]);
         temp->arrivalTime = atoi(keyWord[(i*7)+12]);
         temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->serialNum= serialTrack;
+        temp->originalBurst = atoi(keyWord[(i*7)+14]);
         temp->next= root;
         root=temp;
+        serialTrack++;
     }
 
 
@@ -169,17 +176,7 @@ void roundRobin(char **keyWord)
     temp = (struct node *) malloc(sizeof(struct node));
 
 
-
-    printf("===========here's the contents of the linked list==========");
-    temp = root;
-    while(temp!=NULL)
-    {
-        printf("\n");
-        printf("process name: %s \n", temp->processNumber);
-        printf("arrival time: %d \n", temp->arrivalTime);
-        printf("burst time: %d \n", temp->burstTime);
-        temp=temp->next;
-    }
+    i=0;
 
 
 
@@ -187,19 +184,8 @@ void roundRobin(char **keyWord)
     sortListByArrivalTime(temp);
     root=temp;
 
-    printf("===========here's the contents of the linked list after a sort==========");
-    while(temp!=NULL)
-    {
-        printf("\n");
-        printf("process name: %s \n", temp->processNumber);
-        printf("arrival time: %d \n", temp->arrivalTime);
-        printf("burst time: %d \n", temp->burstTime);
-        temp=temp->next;
-    }
-
 
     //start of the actual processing step
-
     listNode *systemsTracker;
     systemsTracker = (struct node *) malloc(sizeof(struct node));
 
@@ -211,7 +197,6 @@ void roundRobin(char **keyWord)
     int jumpProcFlag = 0;
     int somethingFinished = 0;
     int quantumCatch =0;
-    //int minProcNum = 0;
 
     while(time<=runTime && gameOver==0)
     {
@@ -224,7 +209,7 @@ void roundRobin(char **keyWord)
         //process arrives, which oversteps standard quantum rules and
         //makes a report no matter what
         temp=root;
-        for(int i=0; i<processCount; i++)
+        for(i=0; i<processCount; i++)
         {
             if(temp->arrivalTime==time)
             {
@@ -252,7 +237,7 @@ void roundRobin(char **keyWord)
         //process finishes, which oversteps quantum rules and makes
         //a report no matter what
         temp=root;
-        for(int i=0; i<processCount; i++)
+        for(i=0; i<processCount; i++)
         {
             if(temp->burstTime==0)
             {
@@ -262,6 +247,8 @@ void roundRobin(char **keyWord)
                 temp->burstTime=-1;
                 currentProc++;
                 somethingFinished=1;
+                //finishTimeKeeper[i] = time;
+                temp->finishTime=time;
             }
             temp=temp->next;
         }
@@ -284,7 +271,7 @@ void roundRobin(char **keyWord)
         // without exceeding max process number
         temp=root;
         int instance = 1;
-        for(int i=0; i<processCount; i++)
+        for(i=0; i<processCount; i++)
         {
             if(instance<currentProc&&temp->burstTime!=-1)
             {
@@ -355,7 +342,7 @@ void roundRobin(char **keyWord)
 
         //we're done, let's get out of here ghost rider
         systemsTracker=root;
-        for(int i=0; i<processCount; i++)
+        for(i=0; i<processCount; i++)
         {
             if(systemsTracker->burstTime!=-1)
                 gameOver=0;
@@ -379,10 +366,27 @@ void roundRobin(char **keyWord)
 
 
     //I'm gonna add turnaround and wait time here later, I'm tired right now...
+    temp=root;
+    int wait;
+    int turnaround;
 
 
+    for(i=0; i<processCount; i++)
+    {
+        int j;
+        for(j=0; j<processCount; j++)
+        {
+            if(temp->serialNum==i)
+            {
+            wait = (temp->finishTime - temp->arrivalTime - temp->originalBurst);
+            turnaround = (temp->finishTime - temp->arrivalTime);
+            printf("%s wait %d turnaround %d \n", temp->processNumber, wait, turnaround);
+            }
 
-
+            temp=temp->next;
+        }
+        temp=root;
+    }
 }
 
 
@@ -418,15 +422,18 @@ void sortListByArrivalTime(struct node *temp)
                 helper->arrivalTime=root->arrivalTime;
                 helper->burstTime= root->burstTime;
                 strcpy(helper->processNumber, root->processNumber);
+                helper->serialNum= root->serialNum;
 
 
                 root->arrivalTime=root->next->arrivalTime;
                 root->burstTime=root->next->burstTime;
                 strcpy(root->processNumber,root->next->processNumber);
+                root->serialNum = root->next->serialNum;
 
                 root->next->arrivalTime=helper->arrivalTime;
                 root->next->burstTime=helper->burstTime;
                 strcpy(root->next->processNumber,helper->processNumber);
+                root->next->serialNum = helper->serialNum;
 
                 switchFlag=1;
             }
