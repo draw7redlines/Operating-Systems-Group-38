@@ -209,8 +209,6 @@ void roundRobin(char **keyWord)
     int currentProc = 0;
     int maxProcNum = 0;
     int jumpProcFlag = 0;
-    int somethingFinished = 0;
-    int quantumCatch =0;
     //int minProcNum = 0;
 
     while(time<=runTime && gameOver==0)
@@ -218,8 +216,6 @@ void roundRobin(char **keyWord)
         //termination case set
         gameOver=1;
         jumpProcFlag = 0;
-        somethingFinished =0;
-        quantumCatch =0;
 
         //process arrives, which oversteps standard quantum rules and
         //makes a report no matter what
@@ -231,22 +227,14 @@ void roundRobin(char **keyWord)
                 printf("Time %d: %s arrived\n", time, temp->processNumber);
                 idleCheck++;
                 maxProcNum++;
-
-                //catches which are used later down the line to manage counter increment shenanigans
-                // when a process arrives
                 jumpProcFlag =1;
-                quantumCatch =1;
-
-                if((time)%quantum==0)
-                {
-                    jumpProcFlag=0;
-                    currentProc=maxProcNum;
-                }
 
             }
             temp=temp->next;
         }
 
+        if(jumpProcFlag==1)
+            currentProc++;
 
 
         //process finishes, which oversteps quantum rules and makes
@@ -260,19 +248,8 @@ void roundRobin(char **keyWord)
                 idleCheck--;
                 maxProcNum--;
                 temp->burstTime=-1;
-                currentProc++;
-                somethingFinished=1;
             }
             temp=temp->next;
-        }
-
-
-        if(currentProc>maxProcNum)
-        {
-            if(idleCheck==0)
-                currentProc=0;
-            else
-                currentProc=1;
         }
 
 
@@ -300,8 +277,11 @@ void roundRobin(char **keyWord)
 
 
 
+
+
+
         //systems report on current operations, this is for all the marbles
-        if(time%quantum==0 || somethingFinished == 1)
+        if(time%quantum==0)
         {
             //it is idling
             if(idleCheck==0)
@@ -319,30 +299,16 @@ void roundRobin(char **keyWord)
         }
 
 
-        //we're not idling so reduce the burst time of the current process
         if(idleCheck>0)
-        {
-                temp->burstTime--;
-
-        }
+            temp->burstTime--;
 
 
 
         //shift the process if we're on a quantum
-        //this had to be modded with a +1 because I didn't plan ahead when I first wrote this
-        //and because of how I increment my time counter, this has to be shifted by one.
-        //hooray for cowboy coding this earlier
-        if((time+1)%quantum==0)
-        {
-            if(quantumCatch!=1)
-            {
-                currentProc++;
-            }
-        }
+        if(time%quantum==0)
+        currentProc++;
 
 
-
-        //check for the need to reset the process counter before the loop runs again
         if(currentProc>maxProcNum)
         {
             if(idleCheck==0)
@@ -352,34 +318,24 @@ void roundRobin(char **keyWord)
         }
 
 
+        //printf("current process set to %d \n", currentProc);
 
-        //we're done, let's get out of here ghost rider
-        systemsTracker=root;
+
+
+
+        //we're done
+        temp=root;
         for(int i=0; i<processCount; i++)
         {
-            if(systemsTracker->burstTime!=-1)
+            if(temp->burstTime!=-1)
                 gameOver=0;
 
-            systemsTracker=systemsTracker->next;
+            temp=temp->next;
         }
 
-        //increment the time
         time++;
 
-        //if something was added and it wasn't on a quantum iteration, then we need to increment to account for it
-        if(jumpProcFlag==1)
-        {
-            currentProc++;
-        }
-
     }
-
-    //print out the runtime used
-    printf("Finished at time %d\n", time);
-
-
-    //I'm gonna add turnaround and wait time here later, I'm tired right now...
-
 
 
 
