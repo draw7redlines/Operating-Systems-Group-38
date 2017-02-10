@@ -472,107 +472,17 @@ void firstComeFirstServed(char **keyWord)
     printf("\n%d processes\n", processCount);
     printf("Using First Come First Served\n\n");
 
+    temp = root;
     // Currently works, but it only sticks to P3 for some reason
-    while(time<=runTime && gameOver==0)
+    while(temp != NULL)
     {
-        //termination case set
-        gameOver=1;
-        jumpProcFlag = 0;
-
-        //process arrives
-        temp=root;
-        for(i=0; i<processCount; i++)
+        if(temp->arrivalTime == time)
         {
-            if(temp->arrivalTime==time)
-            {
-                printf("Time %d: %s arrived\n", time, temp->processNumber);
-                idleCheck++;
-                maxProcNum++;
-                jumpProcFlag =1;
-
-            }
-            temp=temp->next;
-        }
-
-        if(jumpProcFlag==1)
-            currentProc++;
-
-
-        //process finishes
-        temp=root;
-        for(i=0; i<processCount; i++)
-        {
-            if(temp->burstTime==0)
-            {
-                printf("Time %d: %s finished\n", time, temp->processNumber);
-                idleCheck--;
-                maxProcNum--;
-                temp->burstTime=-1;
-            }
-            temp=temp->next;
-        }
-
-
-
-        //pick our poison (process)
-        //find currentProc instance of node without -1 burst. currentProc increments until it hits
-        //max process which is highest node it should go up to. Then it resets to the
-        //first instance of a node without a -1 burst, then increments up to the next one
-        // without exceeding max process number
-        temp=root;
-        int instance = 1;
-        for(i=0; i<processCount; i++)
-        {
-            if(instance<currentProc&&temp->burstTime!=-1)
-            {
-                temp=temp->next;
-                instance++;
-            }
-
-            else if(instance<currentProc)
-            {
-                temp=temp->next;
-            }
-        }
-
-        //it is idling
-        if(idleCheck==0)
-        {
-            printf("Time %d: IDLE\n", time);
-        }
-
-        //we've got something selected, and we report it's remaining burst
-        else
-        {
-            printf("Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
-        }
-
-
-        if(idleCheck>0)
-            temp->burstTime--;
-
-//        currentProc++;
-//
-//        if(currentProc>maxProcNum)
-//        {
-//            if(idleCheck==0)
-//                currentProc=0;
-//            else
-//                currentProc=1;
-//        }
-
-        //we're done
-        temp=root;
-        for(i=0; i<processCount; i++)
-        {
-            if(temp->burstTime!=-1)
-                gameOver=0;
-
-            temp=temp->next;
+            printf("Time %d: %s arrived\n", time, temp->processNumber);
+            temp = temp->next;
         }
 
         time++;
-
     }
 }
 
