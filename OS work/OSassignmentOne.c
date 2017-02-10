@@ -21,6 +21,7 @@ int originalBurst;
 
 void headerMaker(char **wordList, FILE *outFile);
 void roundRobin(char **keyWord, FILE *outFile);
+void shortestJobFirst(char** keyWord, FILE *outFile);
 
 
 
@@ -35,12 +36,8 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-<<<<<<< HEAD
     FILE *finput = fopen("set4_process.in", "r");
-=======
-    FILE *finput = fopen("set2_process.in", "r");
     FILE *foutput = fopen("processes.out", "w");
->>>>>>> refs/remotes/origin/master
 
     //file exception catch
     if(finput==NULL)
@@ -89,7 +86,7 @@ void main()
     }
     if(strcmp(keyword[5], "sjf")==0)
     {
-        shortestJobFirst(keyword);
+        shortestJobFirst(keyword, foutput);
     }
 
 
@@ -124,16 +121,12 @@ void headerMaker(char **wordList, FILE *outFile)
             else if(strcmp(wordList[5], "fcfs")==0)
             {
 
-                fprintf(outFile,"using First Come First Serve\n");
+                fprintf(outFile,"Using First Come First Serve\n");
             }
 
             else if(strcmp(wordList[5], "sjf")==0)
             {
-<<<<<<< HEAD
-                printf("using Shortest Job First\n\n");
-=======
-                fprintf(outFile,"using Shortest Job First\n");
->>>>>>> refs/remotes/origin/master
+                fprintf(outFile,"Using Shortest Job First (Pre)\n");
             }
 
 
@@ -402,7 +395,7 @@ void roundRobin(char **keyWord, FILE *outFile)
     }
 }
 
-void shortestJobFirst(char** keyWord)
+void shortestJobFirst(char** keyWord, FILE *outFile)
 {
     int processCount;
     int runTime;
@@ -469,19 +462,19 @@ void shortestJobFirst(char** keyWord)
         {
             if(temp->arrivalTime == time)
             {
-                printf("Time %d: %s Arrived\n",time ,temp->processNumber);
+                fprintf(outFile,"Time %d: %s arrived\n",time ,temp->processNumber);
 
 
                 if(processSelected == 0)
                 {
-                    printf("Time %d: %s Selected(burst %d)\n",time ,temp->processNumber,temp->burstTime);
+                    fprintf(outFile,"Time %d: %s selected (burst %d)\n",time ,temp->processNumber,temp->burstTime);
 
                     processSelected = 1;
                     lowBurst = temp->burstTime;
                 }
                 else if((processSelected == 1) && (temp->burstTime < lowBurst))
                 {
-                    printf("Time %d: %s Selected(burst %d)\n",time ,temp->processNumber,temp->burstTime);
+                    fprintf(outFile,"Time %d: %s selected (burst %d)\n",time ,temp->processNumber,temp->burstTime);
 
 
                     listNode *swapNode;
@@ -507,7 +500,7 @@ void shortestJobFirst(char** keyWord)
 
        if((idleCheck != 1) && (temp->burstTime == 0))
        {
-            printf("Time %d: %s finished\n",time ,temp->processNumber);
+            fprintf(outFile,"Time %d: %s finished\n",time ,temp->processNumber);
             temp->finishTime = time;
 
             processCount--;
@@ -522,7 +515,7 @@ void shortestJobFirst(char** keyWord)
                 lowBurst = root->burstTime;
 
                 if(root->burstTime <= lowBurst)
-                    printf("Time %d: %s Selected(burst %d)\n",time ,root->processNumber,root->burstTime);
+                    fprintf(outFile,"Time %d: %s selected (burst %d)\n",time ,root->processNumber,root->burstTime);
             }
 
 
@@ -532,7 +525,7 @@ void shortestJobFirst(char** keyWord)
 
         if((processCount == 0) && (time != runTime))
         {
-            printf("Time %d:IDLE\n",time);
+            fprintf(outFile,"Time %d: IDLE\n",time);
             idleCheck = 1;
         }
 
@@ -540,7 +533,7 @@ void shortestJobFirst(char** keyWord)
 
         if(time == runTime)
         {
-            printf("Finished at time %d\n\n",time);
+            fprintf(outFile,"Finished at time %d\n\n",time);
 
             sortListByProcNumber(rockRoot);
             while(rockRoot)
@@ -549,7 +542,7 @@ void shortestJobFirst(char** keyWord)
                 int wait = (rockRoot->finishTime - rockRoot->arrivalTime - rockRoot->originalBurst);
                 int turnaround = (rockRoot->finishTime - rockRoot->arrivalTime);
 
-                printf("%s wait %d turnaround %d\n",rockRoot->processNumber,wait,turnaround);
+                fprintf(outFile,"%s wait %d turnaround %d\n",rockRoot->processNumber,wait,turnaround);
 
                 rockRoot = rockRoot->next;
             }
