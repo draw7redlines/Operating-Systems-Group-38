@@ -19,8 +19,8 @@ int originalBurst;
 
 
 
-void headerMaker(char **wordList);
-//void roundRobin(char **keyWord);
+void headerMaker(char **wordList, FILE *outFile);
+void roundRobin(char **keyWord, FILE *outFile);
 
 
 
@@ -35,7 +35,12 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
+<<<<<<< HEAD
     FILE *finput = fopen("set4_process.in", "r");
+=======
+    FILE *finput = fopen("set2_process.in", "r");
+    FILE *foutput = fopen("processes.out", "w");
+>>>>>>> refs/remotes/origin/master
 
     //file exception catch
     if(finput==NULL)
@@ -74,12 +79,13 @@ void main()
         }
     }
 
-    headerMaker(keyword);
+    headerMaker(keyword, foutput);
+    fprintf(foutput, "\n");
 
 
     if(strcmp(keyword[5], "rr")==0)
     {
-        roundRobin(keyword);
+        roundRobin(keyword, foutput);
     }
     if(strcmp(keyword[5], "sjf")==0)
     {
@@ -88,6 +94,7 @@ void main()
 
 
     fclose(finput);
+    fclose(foutput);
 
     return;
 }
@@ -95,7 +102,7 @@ void main()
 
 
 //making a heading function since process count, method, and possible quantum are pretty universal on the outputs
-void headerMaker(char **wordList)
+void headerMaker(char **wordList, FILE *outFile)
 {
 
     int processHelper;
@@ -105,27 +112,28 @@ void headerMaker(char **wordList)
     processHelper = atoi(wordList[1]);
 
 
-        printf("\n\n\n");
-        printf("Below will print to file\n");
-        printf("=======================================\n\n");
-        printf("%d processes \n", processHelper);
+        fprintf(outFile,"%d processes \n", processHelper);
             if(strcmp(wordList[5], "rr")==0)
             {
-                printf("using Round-Robin\n");
+                fprintf(outFile,"Using Round-Robin\n");
 
                 quantumHelper = atoi(wordList[7]);
-                printf("Quantum %d \n", quantumHelper);
+                fprintf(outFile,"Quantum %d \n", quantumHelper);
 
             }
             else if(strcmp(wordList[5], "fcfs")==0)
             {
 
-                printf("using First Come First Serve\n");
+                fprintf(outFile,"using First Come First Serve\n");
             }
 
             else if(strcmp(wordList[5], "sjf")==0)
             {
+<<<<<<< HEAD
                 printf("using Shortest Job First\n\n");
+=======
+                fprintf(outFile,"using Shortest Job First\n");
+>>>>>>> refs/remotes/origin/master
             }
 
 
@@ -140,7 +148,7 @@ void headerMaker(char **wordList)
 
 
 //let's get some red robin's, I mean round robin going
-void roundRobin(char **keyWord)
+void roundRobin(char **keyWord, FILE *outFile)
 {
     int processCount;
     int runTime;
@@ -217,7 +225,7 @@ void roundRobin(char **keyWord)
         {
             if(temp->arrivalTime==time)
             {
-                printf("Time %d: %s arrived\n", time, temp->processNumber);
+                fprintf(outFile,"Time %d: %s arrived\n", time, temp->processNumber);
                 idleCheck++;
                 maxProcNum++;
 
@@ -245,7 +253,7 @@ void roundRobin(char **keyWord)
         {
             if(temp->burstTime==0)
             {
-                printf("Time %d: %s finished\n", time, temp->processNumber);
+                fprintf(outFile,"Time %d: %s finished\n", time, temp->processNumber);
                 idleCheck--;
                 maxProcNum--;
                 temp->burstTime=-1;
@@ -297,13 +305,13 @@ void roundRobin(char **keyWord)
             //it is idling
             if(idleCheck==0)
             {
-                printf("Time %d: IDLE\n", time);
+                fprintf(outFile,"Time %d: IDLE\n", time);
             }
 
             //we've got something selected, and we report it's remaining burst
             else
             {
-                printf("Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
+                fprintf(outFile,"Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
             }
 
 
@@ -366,7 +374,8 @@ void roundRobin(char **keyWord)
     }
 
     //print out the runtime used
-    printf("Finished at time %d\n", time);
+    fprintf(outFile,"Finished at time %d\n", time);
+    fprintf(outFile, "\n");
 
 
     //I'm gonna add turnaround and wait time here later, I'm tired right now...
@@ -384,7 +393,7 @@ void roundRobin(char **keyWord)
             {
             wait = (temp->finishTime - temp->arrivalTime - temp->originalBurst);
             turnaround = (temp->finishTime - temp->arrivalTime);
-            printf("%s wait %d turnaround %d \n", temp->processNumber, wait, turnaround);
+            fprintf(outFile,"%s wait %d turnaround %d \n", temp->processNumber, wait, turnaround);
             }
 
             temp=temp->next;
