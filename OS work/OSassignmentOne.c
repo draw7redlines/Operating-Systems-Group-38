@@ -242,7 +242,6 @@ void roundRobin(char **keyWord)
         if(jumpProcFlag==1)
             currentProc++;
 
-
         //process finishes, which oversteps quantum rules and makes
         //a report no matter what
         temp=root;
@@ -470,17 +469,17 @@ void firstComeFirstServed(char **keyWord)
         temp=temp->next;
     }
 
-    printf("%d processes\n", processCount);
-    printf("Using First Come First Served\n");
+    printf("\n%d processes\n", processCount);
+    printf("Using First Come First Served\n\n");
 
+    // Currently works, but it only sticks to P3 for some reason
     while(time<=runTime && gameOver==0)
     {
         //termination case set
         gameOver=1;
         jumpProcFlag = 0;
 
-        //process arrives, which oversteps standard quantum rules and
-        //makes a report no matter what
+        //process arrives
         temp=root;
         for(i=0; i<processCount; i++)
         {
@@ -499,8 +498,7 @@ void firstComeFirstServed(char **keyWord)
             currentProc++;
 
 
-        //process finishes, which oversteps quantum rules and makes
-        //a report no matter what
+        //process finishes
         temp=root;
         for(i=0; i<processCount; i++)
         {
@@ -537,8 +535,31 @@ void firstComeFirstServed(char **keyWord)
             }
         }
 
+        //it is idling
+        if(idleCheck==0)
+        {
+            printf("Time %d: IDLE\n", time);
+        }
+
+        //we've got something selected, and we report it's remaining burst
+        else
+        {
+            printf("Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
+        }
+
+
         if(idleCheck>0)
             temp->burstTime--;
+
+//        currentProc++;
+//
+//        if(currentProc>maxProcNum)
+//        {
+//            if(idleCheck==0)
+//                currentProc=0;
+//            else
+//                currentProc=1;
+//        }
 
         //we're done
         temp=root;
