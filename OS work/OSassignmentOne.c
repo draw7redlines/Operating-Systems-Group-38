@@ -500,6 +500,7 @@ void firstComeFirstServed(char **keyWord)
                 printf("Time %d: %s finished\n", time, temp->processNumber);
                 selectP = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
                 listNode *newRoot;
@@ -513,6 +514,9 @@ void firstComeFirstServed(char **keyWord)
 
 
 >>>>>>> origin/Nick-the-Ho's-branch-of-memery
+=======
+
+>>>>>>> parent of f129260... Dump Stuff
             }
 
             if(temp->next != NULL)
@@ -527,9 +531,11 @@ void firstComeFirstServed(char **keyWord)
         if(temp->burstTime > 0)
             temp->burstTime--;
 
+
         time++;
     }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     printf("Finished at time %d\n\n", runTime);
 =======
@@ -537,6 +543,9 @@ void firstComeFirstServed(char **keyWord)
     if(time <= runTime)
         printf("Finished at time %d\n\n", time);
 >>>>>>> origin/Nick-the-Ho's-branch-of-memery
+=======
+    printf("Finished at time %d\n\n", time);
+>>>>>>> parent of f129260... Dump Stuff
 }
 
 
