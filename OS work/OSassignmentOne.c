@@ -220,7 +220,7 @@ void roundRobin(char **keyWord)
     while(time<=runTime && gameOver==0)
     {
         //termination case set
-        gameOver=1;
+        gameOver = 1;
         jumpProcFlag = 0;
 
         //process arrives, which oversteps standard quantum rules and
@@ -472,18 +472,47 @@ void firstComeFirstServed(char **keyWord)
     printf("\n%d processes\n", processCount);
     printf("Using First Come First Served\n\n");
 
+    int selectP = 0;
     temp = root;
     // Currently works, but it only sticks to P3 for some reason
-    while(temp != NULL)
+    while(time < runTime)
     {
-        if(temp->arrivalTime == time)
+        for(i = 0; i < processCount; i++)
         {
-            printf("Time %d: %s arrived\n", time, temp->processNumber);
-            temp = temp->next;
+            // Shows which process
+            if(temp->arrivalTime==time)
+            {
+                printf("Time %d: %s arrived\n", time, temp->processNumber);
+                idleCheck++;
+                maxProcNum++;
+                jumpProcFlag =1;
+            }
+
+            if(selectP == 0)
+            {
+                printf("Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
+                selectP++;
+            }
+
+            if(temp->burstTime == 0)
+            {
+                printf("Time %d: %s finished\n", time, temp->processNumber);
+                selectP = 0;
+
+            }
+            temp=temp->next;
         }
+
+        temp = root;
+
+        if(temp->burstTime > 0)
+            temp->burstTime--;
+
 
         time++;
     }
+
+    printf("Finished at time %d\n\n", time);
 }
 
 
