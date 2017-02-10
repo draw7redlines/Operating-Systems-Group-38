@@ -32,7 +32,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set2_process.in", "r");
+    FILE *finput = fopen("set1_process.in", "r");
 
     //file exception catch
     if(finput==NULL)
@@ -407,7 +407,12 @@ void firstComeFirstServed(char **keyWord)
     int processCount;
     int runTime;
     int i;
-
+    int time=0;
+    int idleCheck = 0;
+    int gameOver=0;
+    int currentProc = 0;
+    int maxProcNum = 0;
+    int jumpProcFlag = 0;
 
     //linked lists are so much fun to make in c, let's build one
     listNode *root;
@@ -463,6 +468,90 @@ void firstComeFirstServed(char **keyWord)
         printf("arrival time: %d \n", temp->arrivalTime);
         printf("burst time: %d \n", temp->burstTime);
         temp=temp->next;
+    }
+
+    printf("%d processes\n", processCount);
+    printf("Using First Come First Served\n");
+
+    while(time<=runTime && gameOver==0)
+    {
+        //termination case set
+        gameOver=1;
+        jumpProcFlag = 0;
+
+        //process arrives, which oversteps standard quantum rules and
+        //makes a report no matter what
+        temp=root;
+        for(i=0; i<processCount; i++)
+        {
+            if(temp->arrivalTime==time)
+            {
+                printf("Time %d: %s arrived\n", time, temp->processNumber);
+                idleCheck++;
+                maxProcNum++;
+                jumpProcFlag =1;
+
+            }
+            temp=temp->next;
+        }
+
+        if(jumpProcFlag==1)
+            currentProc++;
+
+
+        //process finishes, which oversteps quantum rules and makes
+        //a report no matter what
+        temp=root;
+        for(i=0; i<processCount; i++)
+        {
+            if(temp->burstTime==0)
+            {
+                printf("Time %d: %s finished\n", time, temp->processNumber);
+                idleCheck--;
+                maxProcNum--;
+                temp->burstTime=-1;
+            }
+            temp=temp->next;
+        }
+
+
+
+        //pick our poison (process)
+        //find currentProc instance of node without -1 burst. currentProc increments until it hits
+        //max process which is highest node it should go up to. Then it resets to the
+        //first instance of a node without a -1 burst, then increments up to the next one
+        // without exceeding max process number
+        temp=root;
+        int instance = 1;
+        for(i=0; i<processCount; i++)
+        {
+            if(instance<currentProc&&temp->burstTime!=-1)
+            {
+                temp=temp->next;
+                instance++;
+            }
+
+            else if(instance<currentProc)
+            {
+                temp=temp->next;
+            }
+        }
+
+        if(idleCheck>0)
+            temp->burstTime--;
+
+        //we're done
+        temp=root;
+        for(i=0; i<processCount; i++)
+        {
+            if(temp->burstTime!=-1)
+                gameOver=0;
+
+            temp=temp->next;
+        }
+
+        time++;
+
     }
 }
 
