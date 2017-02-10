@@ -498,7 +498,6 @@ void firstComeFirstServed(char **keyWord)
             {
                 printf("Time %d: %s finished\n", time, temp->processNumber);
                 selectP = 0;
-
             }
             temp=temp->next;
         }
@@ -508,11 +507,10 @@ void firstComeFirstServed(char **keyWord)
         if(temp->burstTime > 0)
             temp->burstTime--;
 
-
         time++;
     }
 
-    printf("Finished at time %d\n\n", time);
+    printf("Finished at time %d\n\n", runTime);
 }
 
 
