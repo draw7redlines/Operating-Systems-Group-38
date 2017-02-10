@@ -412,6 +412,7 @@ void firstComeFirstServed(char **keyWord)
     int currentProc = 0;
     int maxProcNum = 0;
     int jumpProcFlag = 0;
+    int finProcs = 0;
 
     //linked lists are so much fun to make in c, let's build one
     listNode *root;
@@ -440,37 +441,9 @@ void firstComeFirstServed(char **keyWord)
     listNode *temp;
     temp = (struct node *) malloc(sizeof(struct node));
 
-
-
-    printf("===========here's the contents of the linked list==========");
-    temp = root;
-    while(temp!=NULL)
-    {
-        printf("\n");
-        printf("process name: %s \n", temp->processNumber);
-        printf("arrival time: %d \n", temp->arrivalTime);
-        printf("burst time: %d \n", temp->burstTime);
-        temp=temp->next;
-    }
-
-
-
     temp=root;
     sortListByArrivalTime(temp);
     root=temp;
-
-    printf("===========here's the contents of the linked list after a sort==========");
-    while(temp!=NULL)
-    {
-        printf("\n");
-        printf("process name: %s \n", temp->processNumber);
-        printf("arrival time: %d \n", temp->arrivalTime);
-        printf("burst time: %d \n", temp->burstTime);
-        temp=temp->next;
-    }
-
-    printf("\n%d processes\n", processCount);
-    printf("Using First Come First Served\n\n");
 
     int selectP = 0;
     temp = root;
@@ -484,9 +457,6 @@ void firstComeFirstServed(char **keyWord)
             if(temp->arrivalTime==time)
             {
                 printf("Time %d: %s arrived\n", time, temp->processNumber);
-                idleCheck++;
-                maxProcNum++;
-                jumpProcFlag =1;
             }
 
             if(selectP == 0)
@@ -498,6 +468,7 @@ void firstComeFirstServed(char **keyWord)
             if(temp->burstTime == 0)
             {
                 printf("Time %d: %s finished\n", time, temp->processNumber);
+                finProcs++;
                 selectP = 0;
 
                 listNode *newRoot;
@@ -519,6 +490,11 @@ void firstComeFirstServed(char **keyWord)
 
         temp = root;
 
+        if(finProcs == processCount)
+        {
+            printf("Time %d: IDLE\n",time);
+        }
+
         if(temp->burstTime > 0)
             temp->burstTime--;
 
@@ -529,6 +505,8 @@ void firstComeFirstServed(char **keyWord)
     time--;
     if(time <= runTime)
         printf("Finished at time %d\n\n", time);
+
+
 }
 
 
