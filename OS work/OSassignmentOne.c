@@ -462,16 +462,18 @@ void shortestJobFirst(char** keyWord)
 
     while(time <= runTime)
     {
-        //Arrival condition
+        //Reset to root
         temp = root;
 
+        //Arrival condition
         for(i = 0; i < processCount; i++)
         {
+            //Check if process arrived
             if(temp->arrivalTime == time)
             {
                 printf("Time %d: %s Arrived\n",time ,temp->processNumber);
 
-
+                //Check if a process is selected, if not set lowest burst time and set process selected
                 if(processSelected == 0)
                 {
                     printf("Time %d: %s Selected(burst %d)\n",time ,temp->processNumber,temp->burstTime);
@@ -479,6 +481,7 @@ void shortestJobFirst(char** keyWord)
                     processSelected = 1;
                     lowBurst = temp->burstTime;
                 }
+                //Check if a process is selected,
                 else if((processSelected == 1) && (temp->burstTime < lowBurst))
                 {
                     printf("Time %d: %s Selected(burst %d)\n",time ,temp->processNumber,temp->burstTime);
