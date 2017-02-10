@@ -490,7 +490,7 @@ void firstComeFirstServed(char **keyWord)
 
         temp = root;
 
-        if(finProcs == processCount)
+        if(finProcs == processCount && time < runTime)
         {
             printf("Time %d: IDLE\n",time);
         }
@@ -504,7 +504,7 @@ void firstComeFirstServed(char **keyWord)
 
     time--;
     if(time <= runTime)
-        printf("Finished at time %d\n\n", time);
+        printf("Finished at time %d\n", time);
 
 
 }
