@@ -35,8 +35,12 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
+<<<<<<< HEAD
+    FILE *finput = fopen("set4_process.in", "r");
+=======
     FILE *finput = fopen("set2_process.in", "r");
     FILE *foutput = fopen("processes.out", "w");
+>>>>>>> refs/remotes/origin/master
 
     //file exception catch
     if(finput==NULL)
@@ -64,10 +68,10 @@ void main()
             while(helper!= NULL)
             {
 
-            printf("flag value is %d \n", flag);
+            //printf("flag value is %d \n", flag);
             keyword[flag] = malloc(50 *sizeof(char));
             strcpy(keyword[flag],helper);
-            printf("Got the current token as: %s \n", keyword[flag]);
+            //printf("Got the current token as: %s \n", keyword[flag]);
             flag++;
 
             helper = strtok(NULL, " ");
@@ -82,6 +86,10 @@ void main()
     if(strcmp(keyword[5], "rr")==0)
     {
         roundRobin(keyword, foutput);
+    }
+    if(strcmp(keyword[5], "sjf")==0)
+    {
+        shortestJobFirst(keyword);
     }
 
 
@@ -121,7 +129,11 @@ void headerMaker(char **wordList, FILE *outFile)
 
             else if(strcmp(wordList[5], "sjf")==0)
             {
+<<<<<<< HEAD
+                printf("using Shortest Job First\n\n");
+=======
                 fprintf(outFile,"using Shortest Job First\n");
+>>>>>>> refs/remotes/origin/master
             }
 
 
@@ -390,6 +402,172 @@ void roundRobin(char **keyWord, FILE *outFile)
     }
 }
 
+void shortestJobFirst(char** keyWord)
+{
+    int processCount;
+    int runTime;
+    int quantum;
+    int finishedProcs = 0;
+    char buffer[1024];
+
+
+
+    //linked lists are so much fun to make in c, let's build one
+    listNode *root;
+    root = (struct node *) malloc(sizeof(struct node));
+    root=NULL;
+
+    listNode *rockRoot;
+    rockRoot = (struct node *) malloc(sizeof(struct node));
+    rockRoot=NULL;
+
+    //temp->next=NULL;
+
+    processCount = atoi(keyWord[1]);
+    runTime = atoi(keyWord[3]);
+    quantum = atoi(keyWord[7]);
+
+    int i;
+
+    //populate the list based on our amount of processes
+    for(i=0; i<processCount; i++)
+    {
+        listNode *temp;
+        temp = (struct node *) malloc(sizeof(struct node));
+
+        strcpy(temp->processNumber,keyWord[(i*7)+10]);
+        temp->arrivalTime = atoi(keyWord[(i*7)+12]);
+        temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->originalBurst = temp->burstTime;
+        temp->next= root;
+        root=temp;
+        rockRoot = temp;
+    }
+
+
+    listNode *temp;
+    temp = (struct node *) malloc(sizeof(struct node));
+
+
+    temp=root;
+    sortListByArrivalTime(temp);
+    root=temp;
+    //rockRoot = temp;
+
+    int time = 0;
+    int idleCheck = 0;
+    int processSelected = 0;
+    int lowBurst = -1;
+
+
+    while(time <= runTime)
+    {
+        //Arrival condition
+        temp = root;
+
+        for(i = 0; i < processCount; i++)
+        {
+            if(temp->arrivalTime == time)
+            {
+                printf("Time %d: %s Arrived\n",time ,temp->processNumber);
+
+
+                if(processSelected == 0)
+                {
+                    printf("Time %d: %s Selected(burst %d)\n",time ,temp->processNumber,temp->burstTime);
+
+                    processSelected = 1;
+                    lowBurst = temp->burstTime;
+                }
+                else if((processSelected == 1) && (temp->burstTime < lowBurst))
+                {
+                    printf("Time %d: %s Selected(burst %d)\n",time ,temp->processNumber,temp->burstTime);
+
+
+                    listNode *swapNode;
+                    swapNode = (struct node *) malloc(sizeof(struct node));
+
+                    swapNode = root;
+                    sortListByLowBurstTime(swapNode);
+                    root = swapNode;
+
+
+                    processSelected = 1;
+                    lowBurst = root->burstTime;
+                }
+
+
+            }
+
+            temp = temp->next;
+        }
+
+
+        temp = root;
+
+       if((idleCheck != 1) && (temp->burstTime == 0))
+       {
+            printf("Time %d: %s finished\n",time ,temp->processNumber);
+            temp->finishTime = time;
+
+            processCount--;
+
+            struct node *newRoot;
+
+            if(root->next != NULL)
+            {
+                newRoot = root;
+                root = root->next;
+
+                lowBurst = root->burstTime;
+
+                if(root->burstTime <= lowBurst)
+                    printf("Time %d: %s Selected(burst %d)\n",time ,root->processNumber,root->burstTime);
+            }
+
+
+       }
+
+        temp = root;
+
+        if((processCount == 0) && (time != runTime))
+        {
+            printf("Time %d:IDLE\n",time);
+            idleCheck = 1;
+        }
+
+
+
+        if(time == runTime)
+        {
+            printf("Finished at time %d\n\n",time);
+
+            sortListByProcNumber(rockRoot);
+            while(rockRoot)
+            {
+
+                int wait = (rockRoot->finishTime - rockRoot->arrivalTime - rockRoot->originalBurst);
+                int turnaround = (rockRoot->finishTime - rockRoot->arrivalTime);
+
+                printf("%s wait %d turnaround %d\n",rockRoot->processNumber,wait,turnaround);
+
+                rockRoot = rockRoot->next;
+            }
+
+        }
+
+
+
+        if(temp->burstTime > 0)
+            temp->burstTime--;
+
+
+
+        time++;
+
+    }
+
+}
 
 
 void sortListByArrivalTime(struct node *temp)
@@ -422,16 +600,22 @@ void sortListByArrivalTime(struct node *temp)
                 //nodes and save a big headache here
                 helper->arrivalTime=root->arrivalTime;
                 helper->burstTime= root->burstTime;
+                helper->finishTime = root->finishTime;
+                helper->originalBurst = root->originalBurst;
                 strcpy(helper->processNumber, root->processNumber);
                 helper->serialNum= root->serialNum;
 
 
                 root->arrivalTime=root->next->arrivalTime;
+                root->finishTime = root->next->finishTime;
+                root->originalBurst = root->next->originalBurst;
                 root->burstTime=root->next->burstTime;
                 strcpy(root->processNumber,root->next->processNumber);
                 root->serialNum = root->next->serialNum;
 
                 root->next->arrivalTime=helper->arrivalTime;
+                root->next->finishTime=helper->finishTime;
+                root->next->originalBurst=helper->originalBurst;
                 root->next->burstTime=helper->burstTime;
                 strcpy(root->next->processNumber,helper->processNumber);
                 root->next->serialNum = helper->serialNum;
@@ -449,17 +633,121 @@ void sortListByArrivalTime(struct node *temp)
 
 
 
+void sortListByProcNumber(struct node *temp)
+{
+    int switchFlag, i;
+    struct node *helper= NULL;
+    struct node *helperTwo = NULL;
+    struct node *root = temp;
+
+    helper = (struct node *) malloc(sizeof(struct node));
+
+    if(root==NULL)
+    {
+        return;
+    }
+
+    switchFlag=1;
+
+    while(switchFlag!=0)
+    {
+        switchFlag=0;
+        root=temp;
+        while(root->next!=NULL)
+        {
+
+            if(strcmp(root->processNumber,root->next->processNumber) > 0)
+            {
+
+                //let's just switch the data instead of the actual
+                //nodes and save a big headache here
+                helper->arrivalTime=root->arrivalTime;
+                helper->burstTime= root->burstTime;
+                helper->finishTime = root->finishTime;
+                helper->originalBurst = root->originalBurst;
+                strcpy(helper->processNumber, root->processNumber);
+                helper->serialNum= root->serialNum;
 
 
+                root->arrivalTime=root->next->arrivalTime;
+                root->finishTime = root->next->finishTime;
+                root->originalBurst = root->next->originalBurst;
+                root->burstTime=root->next->burstTime;
+                strcpy(root->processNumber,root->next->processNumber);
+                root->serialNum = root->next->serialNum;
+
+                root->next->arrivalTime=helper->arrivalTime;
+                root->next->finishTime=helper->finishTime;
+                root->next->originalBurst=helper->originalBurst;
+                root->next->burstTime=helper->burstTime;
+                strcpy(root->next->processNumber,helper->processNumber);
+                root->next->serialNum = helper->serialNum;
+
+                switchFlag=1;
+            }
+
+            root=root->next;
+        }
 
 
+    }
+
+}
+
+void sortListByLowBurstTime(struct node *temp)
+{
+    int switchFlag, i;
+    struct node *helper= NULL;
+    struct node *helperTwo = NULL;
+    struct node *root = temp;
+
+    helper = (struct node *) malloc(sizeof(struct node));
+
+    if(root==NULL)
+    {
+        return;
+    }
+
+    switchFlag=1;
+
+    while(switchFlag!=0)
+    {
+        switchFlag=0;
+        root=temp;
+        while(root->next!=NULL)
+        {
+
+            if(root->burstTime > root->next->burstTime)
+            {
+
+                //let's just switch the data instead of the actual
+                //nodes and save a big headache here
+                helper->arrivalTime=root->arrivalTime;
+                helper->burstTime= root->burstTime;
+                helper->originalBurst = root->originalBurst;
+                strcpy(helper->processNumber, root->processNumber);
+                helper->serialNum= root->serialNum;
 
 
+                root->arrivalTime=root->next->arrivalTime;
+                root->originalBurst = root->next->originalBurst;
+                root->burstTime=root->next->burstTime;
+                strcpy(root->processNumber,root->next->processNumber);
+                root->serialNum = root->next->serialNum;
+
+                root->next->arrivalTime=helper->arrivalTime;
+                root->next->originalBurst=helper->originalBurst;
+                root->next->burstTime=helper->burstTime;
+                strcpy(root->next->processNumber,helper->processNumber);
+                root->next->serialNum = helper->serialNum;
+
+                switchFlag=1;
+            }
+
+            root=root->next;
+        }
 
 
+    }
 
-
-
-
-
-
+}
