@@ -10,15 +10,20 @@ char processNumber[20];
 int arrivalTime;
 int burstTime;
 struct node *next;
+int serialNum;
+int finishTime;
+int originalBurst;
 }listNode;
 
 
 
 
 
-void headerMaker(char **wordList);
-//void roundRobin(char **keyWord);
+
 void firstComeFirstServed(char **keyWord);
+void headerMaker(char **wordList, FILE *outFile);
+void roundRobin(char **keyWord, FILE *outFile);
+void shortestJobFirst(char** keyWord, FILE *outFile);
 
 
 void main()
@@ -32,7 +37,8 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set1_process.in", "r");
+    FILE *finput = fopen("set2_process.in", "r");
+    FILE *foutput = fopen("processes.out", "w");
 
     //file exception catch
     if(finput==NULL)
@@ -60,10 +66,10 @@ void main()
             while(helper!= NULL)
             {
 
-            printf("flag value is %d \n", flag);
+            //printf("flag value is %d \n", flag);
             keyword[flag] = malloc(50 *sizeof(char));
             strcpy(keyword[flag],helper);
-            printf("Got the current token as: %s \n", keyword[flag]);
+            //printf("Got the current token as: %s \n", keyword[flag]);
             flag++;
 
             helper = strtok(NULL, " ");
@@ -71,12 +77,17 @@ void main()
         }
     }
 
-    headerMaker(keyword);
+    headerMaker(keyword, foutput);
+    fprintf(foutput, "\n");
 
 
     if(strcmp(keyword[5], "rr")==0)
     {
-        roundRobin(keyword);
+        roundRobin(keyword, foutput);
+    }
+    if(strcmp(keyword[5], "sjf")==0)
+    {
+        shortestJobFirst(keyword, foutput);
     }
 
     if(strcmp(keyword[5], "fcfs")==0)
@@ -86,6 +97,7 @@ void main()
 
 
     fclose(finput);
+    fclose(foutput);
 
     return;
 }
@@ -93,7 +105,7 @@ void main()
 
 
 //making a heading function since process count, method, and possible quantum are pretty universal on the outputs
-void headerMaker(char **wordList)
+void headerMaker(char **wordList, FILE *outFile)
 {
 
     int processHelper;
@@ -103,27 +115,24 @@ void headerMaker(char **wordList)
     processHelper = atoi(wordList[1]);
 
 
-        printf("\n\n\n");
-        printf("Below will print to file\n");
-        printf("=======================================\n\n");
-        printf("%d processes \n", processHelper);
+        fprintf(outFile,"%d processes \n", processHelper);
             if(strcmp(wordList[5], "rr")==0)
             {
-                printf("using Round-Robin\n");
+                fprintf(outFile,"Using Round-Robin\n");
 
                 quantumHelper = atoi(wordList[7]);
-                printf("Quantum %d \n", quantumHelper);
+                fprintf(outFile,"Quantum %d \n", quantumHelper);
 
             }
             else if(strcmp(wordList[5], "fcfs")==0)
             {
 
-                printf("using First Come First Serve\n");
+                fprintf(outFile,"Using First Come First Serve\n");
             }
 
             else if(strcmp(wordList[5], "sjf")==0)
             {
-                printf("using Shortest Job First\n");
+                fprintf(outFile,"Using Shortest Job First (Pre)\n");
             }
 
 
@@ -138,12 +147,13 @@ void headerMaker(char **wordList)
 
 
 //let's get some red robin's, I mean round robin going
-void roundRobin(char **keyWord)
+void roundRobin(char **keyWord, FILE *outFile)
 {
     int processCount;
     int runTime;
     int quantum;
     int i;
+    int serialTrack =0;
 
 
     //linked lists are so much fun to make in c, let's build one
@@ -151,7 +161,6 @@ void roundRobin(char **keyWord)
     root = (struct node *) malloc(sizeof(struct node));
     root=NULL;
 
-    //temp->next=NULL;
 
     processCount = atoi(keyWord[1]);
     runTime = atoi(keyWord[3]);
@@ -166,8 +175,11 @@ void roundRobin(char **keyWord)
         strcpy(temp->processNumber,keyWord[(i*7)+10]);
         temp->arrivalTime = atoi(keyWord[(i*7)+12]);
         temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->serialNum= serialTrack;
+        temp->originalBurst = atoi(keyWord[(i*7)+14]);
         temp->next= root;
         root=temp;
+        serialTrack++;
     }
 
 
@@ -175,17 +187,7 @@ void roundRobin(char **keyWord)
     temp = (struct node *) malloc(sizeof(struct node));
 
 
-
-    printf("===========here's the contents of the linked list==========");
-    temp = root;
-    while(temp!=NULL)
-    {
-        printf("\n");
-        printf("process name: %s \n", temp->processNumber);
-        printf("arrival time: %d \n", temp->arrivalTime);
-        printf("burst time: %d \n", temp->burstTime);
-        temp=temp->next;
-    }
+    i=0;
 
 
 
@@ -193,19 +195,8 @@ void roundRobin(char **keyWord)
     sortListByArrivalTime(temp);
     root=temp;
 
-    printf("===========here's the contents of the linked list after a sort==========");
-    while(temp!=NULL)
-    {
-        printf("\n");
-        printf("process name: %s \n", temp->processNumber);
-        printf("arrival time: %d \n", temp->arrivalTime);
-        printf("burst time: %d \n", temp->burstTime);
-        temp=temp->next;
-    }
-
 
     //start of the actual processing step
-
     listNode *systemsTracker;
     systemsTracker = (struct node *) malloc(sizeof(struct node));
 
@@ -215,13 +206,16 @@ void roundRobin(char **keyWord)
     int currentProc = 0;
     int maxProcNum = 0;
     int jumpProcFlag = 0;
-    //int minProcNum = 0;
+    int somethingFinished = 0;
+    int quantumCatch =0;
 
     while(time<=runTime && gameOver==0)
     {
         //termination case set
         gameOver = 1;
         jumpProcFlag = 0;
+        somethingFinished =0;
+        quantumCatch =0;
 
         //process arrives, which oversteps standard quantum rules and
         //makes a report no matter what
@@ -230,17 +224,25 @@ void roundRobin(char **keyWord)
         {
             if(temp->arrivalTime==time)
             {
-                printf("Time %d: %s arrived\n", time, temp->processNumber);
+                fprintf(outFile,"Time %d: %s arrived\n", time, temp->processNumber);
                 idleCheck++;
                 maxProcNum++;
+
+                //catches which are used later down the line to manage counter increment shenanigans
+                // when a process arrives
                 jumpProcFlag =1;
+                quantumCatch =1;
+
+                if((time)%quantum==0)
+                {
+                    jumpProcFlag=0;
+                    currentProc=maxProcNum;
+                }
 
             }
             temp=temp->next;
         }
 
-        if(jumpProcFlag==1)
-            currentProc++;
 
         //process finishes, which oversteps quantum rules and makes
         //a report no matter what
@@ -249,12 +251,25 @@ void roundRobin(char **keyWord)
         {
             if(temp->burstTime==0)
             {
-                printf("Time %d: %s finished\n", time, temp->processNumber);
+                fprintf(outFile,"Time %d: %s finished\n", time, temp->processNumber);
                 idleCheck--;
                 maxProcNum--;
                 temp->burstTime=-1;
+                currentProc++;
+                somethingFinished=1;
+                //finishTimeKeeper[i] = time;
+                temp->finishTime=time;
             }
             temp=temp->next;
+        }
+
+
+        if(currentProc>maxProcNum)
+        {
+            if(idleCheck==0)
+                currentProc=0;
+            else
+                currentProc=1;
         }
 
 
@@ -282,38 +297,49 @@ void roundRobin(char **keyWord)
 
 
 
-
-
-
         //systems report on current operations, this is for all the marbles
-        if(time%quantum==0)
+        if(time%quantum==0 || somethingFinished == 1)
         {
             //it is idling
             if(idleCheck==0)
             {
-                printf("Time %d: IDLE\n", time);
+                fprintf(outFile,"Time %d: IDLE\n", time);
             }
 
             //we've got something selected, and we report it's remaining burst
             else
             {
-                printf("Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
+                fprintf(outFile,"Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
             }
 
 
         }
 
 
+        //we're not idling so reduce the burst time of the current process
         if(idleCheck>0)
-            temp->burstTime--;
+        {
+                temp->burstTime--;
+
+        }
 
 
 
         //shift the process if we're on a quantum
-        if(time%quantum==0)
-        currentProc++;
+        //this had to be modded with a +1 because I didn't plan ahead when I first wrote this
+        //and because of how I increment my time counter, this has to be shifted by one.
+        //hooray for cowboy coding this earlier
+        if((time+1)%quantum==0)
+        {
+            if(quantumCatch!=1)
+            {
+                currentProc++;
+            }
+        }
 
 
+
+        //check for the need to reset the process counter before the loop runs again
         if(currentProc>maxProcNum)
         {
             if(idleCheck==0)
@@ -323,29 +349,225 @@ void roundRobin(char **keyWord)
         }
 
 
-        //printf("current process set to %d \n", currentProc);
 
-
-
-
-        //we're done
-        temp=root;
+        //we're done, let's get out of here ghost rider
+        systemsTracker=root;
         for(i=0; i<processCount; i++)
         {
-            if(temp->burstTime!=-1)
+            if(systemsTracker->burstTime!=-1)
                 gameOver=0;
+
+            systemsTracker=systemsTracker->next;
+        }
+
+        //increment the time
+        time++;
+
+
+
+        //if something was added and it wasn't on a quantum iteration, then we need to increment to account for it
+        if(jumpProcFlag==1)
+        {
+            currentProc++;
+        }
+
+    }
+
+    //print out the runtime used
+    fprintf(outFile,"Finished at time %d\n", time);
+    fprintf(outFile, "\n");
+
+
+    //I'm gonna add turnaround and wait time here later, I'm tired right now...
+    temp=root;
+    int wait;
+    int turnaround;
+
+
+    for(i=0; i<processCount; i++)
+    {
+        int j;
+        for(j=0; j<processCount; j++)
+        {
+            if(temp->serialNum==i)
+            {
+            wait = (temp->finishTime - temp->arrivalTime - temp->originalBurst);
+            turnaround = (temp->finishTime - temp->arrivalTime);
+            fprintf(outFile,"%s wait %d turnaround %d \n", temp->processNumber, wait, turnaround);
+            }
 
             temp=temp->next;
         }
+        temp=root;
+    }
+}
+
+void shortestJobFirst(char** keyWord, FILE *outFile)
+{
+    int processCount;
+    int runTime;
+    int quantum;
+    int finishedProcs = 0;
+    char buffer[1024];
+
+
+
+    //linked lists are so much fun to make in c, let's build one
+    listNode *root;
+    root = (struct node *) malloc(sizeof(struct node));
+    root=NULL;
+
+    listNode *rockRoot;
+    rockRoot = (struct node *) malloc(sizeof(struct node));
+    rockRoot=NULL;
+
+    //temp->next=NULL;
+
+    processCount = atoi(keyWord[1]);
+    runTime = atoi(keyWord[3]);
+    quantum = atoi(keyWord[7]);
+
+    int i;
+
+    //populate the list based on our amount of processes
+    for(i=0; i<processCount; i++)
+    {
+        listNode *temp;
+        temp = (struct node *) malloc(sizeof(struct node));
+
+        strcpy(temp->processNumber,keyWord[(i*7)+10]);
+        temp->arrivalTime = atoi(keyWord[(i*7)+12]);
+        temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->originalBurst = temp->burstTime;
+        temp->next= root;
+        root=temp;
+        rockRoot = temp;
+    }
+
+
+    listNode *temp;
+    temp = (struct node *) malloc(sizeof(struct node));
+
+
+    temp=root;
+    sortListByArrivalTime(temp);
+    root=temp;
+    //rockRoot = temp;
+
+    int time = 0;
+    int idleCheck = 0;
+    int processSelected = 0;
+    int lowBurst = -1;
+
+
+    while(time <= runTime)
+    {
+        //Arrival condition
+        temp = root;
+
+        for(i = 0; i < processCount; i++)
+        {
+            if(temp->arrivalTime == time)
+            {
+                fprintf(outFile,"Time %d: %s arrived\n",time ,temp->processNumber);
+
+
+                if(processSelected == 0)
+                {
+                    fprintf(outFile,"Time %d: %s selected (burst %d)\n",time ,temp->processNumber,temp->burstTime);
+
+                    processSelected = 1;
+                    lowBurst = temp->burstTime;
+                }
+                else if((processSelected == 1) && (temp->burstTime < lowBurst))
+                {
+                    fprintf(outFile,"Time %d: %s selected (burst %d)\n",time ,temp->processNumber,temp->burstTime);
+
+
+                    listNode *swapNode;
+                    swapNode = (struct node *) malloc(sizeof(struct node));
+
+                    swapNode = root;
+                    sortListByLowBurstTime(swapNode);
+                    root = swapNode;
+
+
+                    processSelected = 1;
+                    lowBurst = root->burstTime;
+                }
+
+
+            }
+
+            temp = temp->next;
+        }
+
+
+        temp = root;
+
+       if((idleCheck != 1) && (temp->burstTime == 0))
+       {
+            fprintf(outFile,"Time %d: %s finished\n",time ,temp->processNumber);
+            temp->finishTime = time;
+
+            processCount--;
+
+            struct node *newRoot;
+
+            if(root->next != NULL)
+            {
+                newRoot = root;
+                root = root->next;
+
+                lowBurst = root->burstTime;
+
+                if(root->burstTime <= lowBurst)
+                    fprintf(outFile,"Time %d: %s selected (burst %d)\n",time ,root->processNumber,root->burstTime);
+            }
+
+
+       }
+
+        temp = root;
+
+        if((processCount == 0) && (time != runTime))
+        {
+            fprintf(outFile,"Time %d: IDLE\n",time);
+            idleCheck = 1;
+        }
+
+
+
+        if(time == runTime)
+        {
+            fprintf(outFile,"Finished at time %d\n\n",time);
+
+            sortListByProcNumber(rockRoot);
+            while(rockRoot)
+            {
+
+                int wait = (rockRoot->finishTime - rockRoot->arrivalTime - rockRoot->originalBurst);
+                int turnaround = (rockRoot->finishTime - rockRoot->arrivalTime);
+
+                fprintf(outFile,"%s wait %d turnaround %d\n",rockRoot->processNumber,wait,turnaround);
+
+                rockRoot = rockRoot->next;
+            }
+
+        }
+
+
+
+        if(temp->burstTime > 0)
+            temp->burstTime--;
+
+
 
         time++;
 
     }
 
-
-
 }
-
 
 
 void sortListByArrivalTime(struct node *temp)
@@ -378,16 +600,25 @@ void sortListByArrivalTime(struct node *temp)
                 //nodes and save a big headache here
                 helper->arrivalTime=root->arrivalTime;
                 helper->burstTime= root->burstTime;
+                helper->finishTime = root->finishTime;
+                helper->originalBurst = root->originalBurst;
                 strcpy(helper->processNumber, root->processNumber);
+                helper->serialNum= root->serialNum;
 
 
                 root->arrivalTime=root->next->arrivalTime;
+                root->finishTime = root->next->finishTime;
+                root->originalBurst = root->next->originalBurst;
                 root->burstTime=root->next->burstTime;
                 strcpy(root->processNumber,root->next->processNumber);
+                root->serialNum = root->next->serialNum;
 
                 root->next->arrivalTime=helper->arrivalTime;
+                root->next->finishTime=helper->finishTime;
+                root->next->originalBurst=helper->originalBurst;
                 root->next->burstTime=helper->burstTime;
                 strcpy(root->next->processNumber,helper->processNumber);
+                root->next->serialNum = helper->serialNum;
 
                 switchFlag=1;
             }
@@ -509,17 +740,121 @@ void firstComeFirstServed(char **keyWord)
 
 }
 
+void sortListByProcNumber(struct node *temp)
+{
+    int switchFlag, i;
+    struct node *helper= NULL;
+    struct node *helperTwo = NULL;
+    struct node *root = temp;
+
+    helper = (struct node *) malloc(sizeof(struct node));
+
+    if(root==NULL)
+    {
+        return;
+    }
+
+    switchFlag=1;
+
+    while(switchFlag!=0)
+    {
+        switchFlag=0;
+        root=temp;
+        while(root->next!=NULL)
+        {
+
+            if(strcmp(root->processNumber,root->next->processNumber) > 0)
+            {
+
+                //let's just switch the data instead of the actual
+                //nodes and save a big headache here
+                helper->arrivalTime=root->arrivalTime;
+                helper->burstTime= root->burstTime;
+                helper->finishTime = root->finishTime;
+                helper->originalBurst = root->originalBurst;
+                strcpy(helper->processNumber, root->processNumber);
+                helper->serialNum= root->serialNum;
 
 
+                root->arrivalTime=root->next->arrivalTime;
+                root->finishTime = root->next->finishTime;
+                root->originalBurst = root->next->originalBurst;
+                root->burstTime=root->next->burstTime;
+                strcpy(root->processNumber,root->next->processNumber);
+                root->serialNum = root->next->serialNum;
+
+                root->next->arrivalTime=helper->arrivalTime;
+                root->next->finishTime=helper->finishTime;
+                root->next->originalBurst=helper->originalBurst;
+                root->next->burstTime=helper->burstTime;
+                strcpy(root->next->processNumber,helper->processNumber);
+                root->next->serialNum = helper->serialNum;
+
+                switchFlag=1;
+            }
+
+            root=root->next;
+        }
 
 
+    }
+
+}
+
+void sortListByLowBurstTime(struct node *temp)
+{
+    int switchFlag, i;
+    struct node *helper= NULL;
+    struct node *helperTwo = NULL;
+    struct node *root = temp;
+
+    helper = (struct node *) malloc(sizeof(struct node));
+
+    if(root==NULL)
+    {
+        return;
+    }
+
+    switchFlag=1;
+
+    while(switchFlag!=0)
+    {
+        switchFlag=0;
+        root=temp;
+        while(root->next!=NULL)
+        {
+
+            if(root->burstTime > root->next->burstTime)
+            {
+
+                //let's just switch the data instead of the actual
+                //nodes and save a big headache here
+                helper->arrivalTime=root->arrivalTime;
+                helper->burstTime= root->burstTime;
+                helper->originalBurst = root->originalBurst;
+                strcpy(helper->processNumber, root->processNumber);
+                helper->serialNum= root->serialNum;
 
 
+                root->arrivalTime=root->next->arrivalTime;
+                root->originalBurst = root->next->originalBurst;
+                root->burstTime=root->next->burstTime;
+                strcpy(root->processNumber,root->next->processNumber);
+                root->serialNum = root->next->serialNum;
+
+                root->next->arrivalTime=helper->arrivalTime;
+                root->next->originalBurst=helper->originalBurst;
+                root->next->burstTime=helper->burstTime;
+                strcpy(root->next->processNumber,helper->processNumber);
+                root->next->serialNum = helper->serialNum;
+
+                switchFlag=1;
+            }
+
+            root=root->next;
+        }
 
 
+    }
 
-
-
-
-
-
+}
