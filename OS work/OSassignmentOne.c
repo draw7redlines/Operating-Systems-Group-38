@@ -35,7 +35,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set3_process.in", "r");
+    FILE *finput = fopen("set4_process.in", "r");
 
     //file exception catch
     if(finput==NULL)
@@ -125,7 +125,7 @@ void headerMaker(char **wordList)
 
             else if(strcmp(wordList[5], "sjf")==0)
             {
-                printf("using Shortest Job First\n");
+                printf("using Shortest Job First\n\n");
             }
 
 
@@ -159,12 +159,8 @@ void roundRobin(char **keyWord)
     quantum = atoi(keyWord[7]);
 
     //populate the list based on our amount of processes
-<<<<<<< HEAD
-;    for(int i=0; i<processCount; i++)
-=======
     int i;
     for(i=0; i<processCount; i++)
->>>>>>> refs/remotes/origin/master
     {
         listNode *temp;
         temp = (struct node *) malloc(sizeof(struct node));
@@ -402,6 +398,9 @@ void shortestJobFirst(char** keyWord)
     int processCount;
     int runTime;
     int quantum;
+    int finishedProcs = 0;
+    char buffer[1024];
+
 
 
     //linked lists are so much fun to make in c, let's build one
@@ -409,14 +408,20 @@ void shortestJobFirst(char** keyWord)
     root = (struct node *) malloc(sizeof(struct node));
     root=NULL;
 
+    listNode *rockRoot;
+    rockRoot = (struct node *) malloc(sizeof(struct node));
+    rockRoot=NULL;
+
     //temp->next=NULL;
 
     processCount = atoi(keyWord[1]);
     runTime = atoi(keyWord[3]);
     quantum = atoi(keyWord[7]);
 
+    int i;
+
     //populate the list based on our amount of processes
-    for(int i=0; i<processCount; i++)
+    for(i=0; i<processCount; i++)
     {
         listNode *temp;
         temp = (struct node *) malloc(sizeof(struct node));
@@ -424,8 +429,10 @@ void shortestJobFirst(char** keyWord)
         strcpy(temp->processNumber,keyWord[(i*7)+10]);
         temp->arrivalTime = atoi(keyWord[(i*7)+12]);
         temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->originalBurst = temp->burstTime;
         temp->next= root;
         root=temp;
+        rockRoot = temp;
     }
 
 
@@ -433,40 +440,18 @@ void shortestJobFirst(char** keyWord)
     temp = (struct node *) malloc(sizeof(struct node));
 
 
-
-    printf("===========here's the contents of the linked list==========");
-    temp = root;
-    while(temp!=NULL)
-    {
-        printf("\n");
-        printf("process name: %s \n", temp->processNumber);
-        printf("arrival time: %d \n", temp->arrivalTime);
-        printf("burst time: %d \n", temp->burstTime);
-        temp=temp->next;
-    }
-
-
-
     temp=root;
     sortListByArrivalTime(temp);
     root=temp;
-
-    printf("===========here's the contents of the linked list after a sort==========");
-    while(temp!=NULL)
-    {
-        printf("\n");
-        printf("process name: %s \n", temp->processNumber);
-        printf("arrival time: %d \n", temp->arrivalTime);
-        printf("burst time: %d \n", temp->burstTime);
-        temp=temp->next;
-    }
+    //rockRoot = temp;
 
     int time = 0;
     int idleCheck = 0;
-    int i;
+    int processSelected = 0;
+    int lowBurst = -1;
 
 
-    while(time < runTime)
+    while(time <= runTime)
     {
         //Arrival condition
         temp = root;
@@ -476,29 +461,104 @@ void shortestJobFirst(char** keyWord)
             if(temp->arrivalTime == time)
             {
                 printf("Time %d: %s Arrived\n",time ,temp->processNumber);
-                idleCheck++;
 
-                temp = temp->next;
+
+                if(processSelected == 0)
+                {
+                    printf("Time %d: %s Selected(burst %d)\n",time ,temp->processNumber,temp->burstTime);
+
+                    processSelected = 1;
+                    lowBurst = temp->burstTime;
+                }
+                else if((processSelected == 1) && (temp->burstTime < lowBurst))
+                {
+                    printf("Time %d: %s Selected(burst %d)\n",time ,temp->processNumber,temp->burstTime);
+
+
+                    listNode *swapNode;
+                    swapNode = (struct node *) malloc(sizeof(struct node));
+
+                    swapNode = root;
+                    sortListByLowBurstTime(swapNode);
+                    root = swapNode;
+
+
+                    processSelected = 1;
+                    lowBurst = root->burstTime;
+                }
+
+
             }
+
+            temp = temp->next;
         }
 
 
         temp = root;
-        if(temp->burstTime == 0)
-        {
-            printf("Time %d: %s finished\n",time ,temp->processNumber);
 
-            if(temp->next != NULL)
-                temp = temp->next;
+       if((idleCheck != 1) && (temp->burstTime == 0))
+       {
+            printf("Time %d: %s finished\n",time ,temp->processNumber);
+            temp->finishTime = time;
+
+            processCount--;
+
+            struct node *newRoot;
+
+            if(root->next != NULL)
+            {
+                newRoot = root;
+                root = root->next;
+
+                lowBurst = root->burstTime;
+
+                if(root->burstTime <= lowBurst)
+                    printf("Time %d: %s Selected(burst %d)\n",time ,root->processNumber,root->burstTime);
+            }
+
+
+       }
+
+        temp = root;
+
+        if((processCount == 0) && (time != runTime))
+        {
+            printf("Time %d:IDLE\n",time);
+            idleCheck = 1;
         }
 
 
 
+        if(time == runTime)
+        {
+            printf("Finished at time %d\n\n",time);
+
+            sortListByProcNumber(rockRoot);
+            while(rockRoot)
+            {
+
+                int wait = (rockRoot->finishTime - rockRoot->arrivalTime - rockRoot->originalBurst);
+                int turnaround = (rockRoot->finishTime - rockRoot->arrivalTime);
+
+                printf("%s wait %d turnaround %d\n",rockRoot->processNumber,wait,turnaround);
+
+                rockRoot = rockRoot->next;
+            }
+
+        }
+
+
+
+        if(temp->burstTime > 0)
+            temp->burstTime--;
+
+
+
         time++;
+
     }
 
 }
-
 
 
 void sortListByArrivalTime(struct node *temp)
@@ -531,16 +591,22 @@ void sortListByArrivalTime(struct node *temp)
                 //nodes and save a big headache here
                 helper->arrivalTime=root->arrivalTime;
                 helper->burstTime= root->burstTime;
+                helper->finishTime = root->finishTime;
+                helper->originalBurst = root->originalBurst;
                 strcpy(helper->processNumber, root->processNumber);
                 helper->serialNum= root->serialNum;
 
 
                 root->arrivalTime=root->next->arrivalTime;
+                root->finishTime = root->next->finishTime;
+                root->originalBurst = root->next->originalBurst;
                 root->burstTime=root->next->burstTime;
                 strcpy(root->processNumber,root->next->processNumber);
                 root->serialNum = root->next->serialNum;
 
                 root->next->arrivalTime=helper->arrivalTime;
+                root->next->finishTime=helper->finishTime;
+                root->next->originalBurst=helper->originalBurst;
                 root->next->burstTime=helper->burstTime;
                 strcpy(root->next->processNumber,helper->processNumber);
                 root->next->serialNum = helper->serialNum;
@@ -556,7 +622,70 @@ void sortListByArrivalTime(struct node *temp)
 
 }
 
-void sortListByBurstTime(struct node *temp)
+
+
+void sortListByProcNumber(struct node *temp)
+{
+    int switchFlag, i;
+    struct node *helper= NULL;
+    struct node *helperTwo = NULL;
+    struct node *root = temp;
+
+    helper = (struct node *) malloc(sizeof(struct node));
+
+    if(root==NULL)
+    {
+        return;
+    }
+
+    switchFlag=1;
+
+    while(switchFlag!=0)
+    {
+        switchFlag=0;
+        root=temp;
+        while(root->next!=NULL)
+        {
+
+            if(strcmp(root->processNumber,root->next->processNumber) > 0)
+            {
+
+                //let's just switch the data instead of the actual
+                //nodes and save a big headache here
+                helper->arrivalTime=root->arrivalTime;
+                helper->burstTime= root->burstTime;
+                helper->finishTime = root->finishTime;
+                helper->originalBurst = root->originalBurst;
+                strcpy(helper->processNumber, root->processNumber);
+                helper->serialNum= root->serialNum;
+
+
+                root->arrivalTime=root->next->arrivalTime;
+                root->finishTime = root->next->finishTime;
+                root->originalBurst = root->next->originalBurst;
+                root->burstTime=root->next->burstTime;
+                strcpy(root->processNumber,root->next->processNumber);
+                root->serialNum = root->next->serialNum;
+
+                root->next->arrivalTime=helper->arrivalTime;
+                root->next->finishTime=helper->finishTime;
+                root->next->originalBurst=helper->originalBurst;
+                root->next->burstTime=helper->burstTime;
+                strcpy(root->next->processNumber,helper->processNumber);
+                root->next->serialNum = helper->serialNum;
+
+                switchFlag=1;
+            }
+
+            root=root->next;
+        }
+
+
+    }
+
+}
+
+void sortListByLowBurstTime(struct node *temp)
 {
     int switchFlag, i;
     struct node *helper= NULL;
@@ -586,16 +715,22 @@ void sortListByBurstTime(struct node *temp)
                 //nodes and save a big headache here
                 helper->arrivalTime=root->arrivalTime;
                 helper->burstTime= root->burstTime;
+                helper->originalBurst = root->originalBurst;
                 strcpy(helper->processNumber, root->processNumber);
+                helper->serialNum= root->serialNum;
 
 
                 root->arrivalTime=root->next->arrivalTime;
+                root->originalBurst = root->next->originalBurst;
                 root->burstTime=root->next->burstTime;
                 strcpy(root->processNumber,root->next->processNumber);
+                root->serialNum = root->next->serialNum;
 
                 root->next->arrivalTime=helper->arrivalTime;
+                root->next->originalBurst=helper->originalBurst;
                 root->next->burstTime=helper->burstTime;
                 strcpy(root->next->processNumber,helper->processNumber);
+                root->next->serialNum = helper->serialNum;
 
                 switchFlag=1;
             }
@@ -607,20 +742,3 @@ void sortListByBurstTime(struct node *temp)
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
