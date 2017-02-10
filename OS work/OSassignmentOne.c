@@ -19,10 +19,11 @@ int originalBurst;
 
 
 
+
+void firstComeFirstServed(char **keyWord);
 void headerMaker(char **wordList, FILE *outFile);
 void roundRobin(char **keyWord, FILE *outFile);
 void shortestJobFirst(char** keyWord, FILE *outFile);
-
 
 
 void main()
@@ -36,7 +37,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set4_process.in", "r");
+    FILE *finput = fopen("set2_process.in", "r");
     FILE *foutput = fopen("processes.out", "w");
 
     //file exception catch
@@ -87,6 +88,11 @@ void main()
     if(strcmp(keyword[5], "sjf")==0)
     {
         shortestJobFirst(keyword, foutput);
+    }
+
+    if(strcmp(keyword[5], "fcfs")==0)
+    {
+        firstComeFirstServed(keyword);
     }
 
 
@@ -146,6 +152,7 @@ void roundRobin(char **keyWord, FILE *outFile)
     int processCount;
     int runTime;
     int quantum;
+    int i;
     int serialTrack =0;
 
 
@@ -160,7 +167,6 @@ void roundRobin(char **keyWord, FILE *outFile)
     quantum = atoi(keyWord[7]);
 
     //populate the list based on our amount of processes
-    int i;
     for(i=0; i<processCount; i++)
     {
         listNode *temp;
@@ -206,7 +212,7 @@ void roundRobin(char **keyWord, FILE *outFile)
     while(time<=runTime && gameOver==0)
     {
         //termination case set
-        gameOver=1;
+        gameOver = 1;
         jumpProcFlag = 0;
         somethingFinished =0;
         quantumCatch =0;
@@ -236,7 +242,6 @@ void roundRobin(char **keyWord, FILE *outFile)
             }
             temp=temp->next;
         }
-
 
 
         //process finishes, which oversteps quantum rules and makes
@@ -357,6 +362,8 @@ void roundRobin(char **keyWord, FILE *outFile)
 
         //increment the time
         time++;
+
+
 
         //if something was added and it wasn't on a quantum iteration, then we need to increment to account for it
         if(jumpProcFlag==1)
@@ -624,7 +631,114 @@ void sortListByArrivalTime(struct node *temp)
 
 }
 
+// I guess you could say it came first
+void firstComeFirstServed(char **keyWord)
+{
+    int processCount;
+    int runTime;
+    int i;
+    int time=0;
+    int idleCheck = 0;
+    int gameOver=0;
+    int currentProc = 0;
+    int maxProcNum = 0;
+    int jumpProcFlag = 0;
+    int finProcs = 0;
 
+    //linked lists are so much fun to make in c, let's build one
+    listNode *root;
+    root = (struct node *) malloc(sizeof(struct node));
+    root=NULL;
+
+    //temp->next=NULL;
+
+    processCount = atoi(keyWord[1]);
+    runTime = atoi(keyWord[3]);
+
+    //populate the list based on our amount of processes
+    for(i=0; i<processCount; i++)
+    {
+        listNode *temp;
+        temp = (struct node *) malloc(sizeof(struct node));
+
+        strcpy(temp->processNumber,keyWord[(i*7)+10]);
+        temp->arrivalTime = atoi(keyWord[(i*7)+12]);
+        temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->next= root;
+        root=temp;
+    }
+
+
+    listNode *temp;
+    temp = (struct node *) malloc(sizeof(struct node));
+
+    temp=root;
+    sortListByArrivalTime(temp);
+    root=temp;
+
+    int selectP = 0;
+    temp = root;
+    // Currently works, but it only sticks to P3 for some reason
+    while(time <= runTime)
+    {
+        for(i = 0; i < processCount; i++)
+        {
+
+            // Shows which process
+            if(temp->arrivalTime==time)
+            {
+                printf("Time %d: %s arrived\n", time, temp->processNumber);
+            }
+
+            if(selectP == 0)
+            {
+                printf("Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
+                selectP++;
+            }
+
+            if(temp->burstTime == 0)
+            {
+                printf("Time %d: %s finished\n", time, temp->processNumber);
+                finProcs++;
+                selectP = 0;
+
+                listNode *newRoot;
+                newRoot = (struct node *) malloc(sizeof(struct node));
+
+                if(root->next != NULL)
+                {
+                    newRoot = root;
+                    root = root->next;
+                }
+            }
+
+            if(temp->next != NULL)
+                temp=temp->next;
+            else
+                break;
+        }
+
+
+        temp = root;
+
+        if(finProcs == processCount && time < runTime)
+        {
+            printf("Time %d: IDLE\n",time);
+        }
+
+        if(temp->burstTime > 0)
+            temp->burstTime--;
+
+
+        time++;
+    }
+
+    time--;
+    if(time <= runTime)
+        printf("Finished at time %d\n", time);
+
+
+}
 
 void sortListByProcNumber(struct node *temp)
 {
