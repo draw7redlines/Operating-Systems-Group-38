@@ -475,10 +475,11 @@ void firstComeFirstServed(char **keyWord)
     int selectP = 0;
     temp = root;
     // Currently works, but it only sticks to P3 for some reason
-    while(time < runTime)
+    while(time <= runTime)
     {
         for(i = 0; i < processCount; i++)
         {
+
             // Shows which process
             if(temp->arrivalTime==time)
             {
@@ -498,9 +499,28 @@ void firstComeFirstServed(char **keyWord)
             {
                 printf("Time %d: %s finished\n", time, temp->processNumber);
                 selectP = 0;
+<<<<<<< HEAD
+=======
+
+                listNode *newRoot;
+                newRoot = (struct node *) malloc(sizeof(struct node));
+
+                if(root->next != NULL)
+                {
+                    newRoot = root;
+                    root = root->next;
+                }
+
+
+>>>>>>> origin/Nick-the-Ho's-branch-of-memery
             }
-            temp=temp->next;
+
+            if(temp->next != NULL)
+                temp=temp->next;
+            else
+                break;
         }
+
 
         temp = root;
 
@@ -510,7 +530,13 @@ void firstComeFirstServed(char **keyWord)
         time++;
     }
 
+<<<<<<< HEAD
     printf("Finished at time %d\n\n", runTime);
+=======
+    time--;
+    if(time <= runTime)
+        printf("Finished at time %d\n\n", time);
+>>>>>>> origin/Nick-the-Ho's-branch-of-memery
 }
 
 
