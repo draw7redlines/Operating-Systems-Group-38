@@ -127,7 +127,7 @@ void headerMaker(char **wordList, FILE *outFile)
             else if(strcmp(wordList[5], "fcfs")==0)
             {
 
-                fprintf(outFile,"Using First Come First Serve\n");
+                fprintf(outFile,"Using First Come First Served\n");
             }
 
             else if(strcmp(wordList[5], "sjf")==0)
