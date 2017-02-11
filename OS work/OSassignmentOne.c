@@ -20,7 +20,7 @@ int originalBurst;
 
 
 
-void firstComeFirstServed(char **keyWord);
+void firstComeFirstServed(char **keyWord, FILE *outfile);
 void headerMaker(char **wordList, FILE *outFile);
 void roundRobin(char **keyWord, FILE *outFile);
 void shortestJobFirst(char** keyWord, FILE *outFile);
@@ -37,7 +37,7 @@ void main()
     char *helper;
 
     //let's get a basic file reader function first...
-    FILE *finput = fopen("set2_process.in", "r");
+    FILE *finput = fopen("set1_process.in", "r");
     FILE *foutput = fopen("processes.out", "w");
 
     //file exception catch
@@ -92,7 +92,7 @@ void main()
 
     if(strcmp(keyword[5], "fcfs")==0)
     {
-        firstComeFirstServed(keyword);
+        firstComeFirstServed(keyword, foutput);
     }
 
 
@@ -632,11 +632,11 @@ void sortListByArrivalTime(struct node *temp)
 }
 
 // I guess you could say it came first
-void firstComeFirstServed(char **keyWord)
+void firstComeFirstServed(char **keyWord, FILE *outfile)
 {
     int processCount;
     int runTime;
-    int i;
+    int i, j;
     int time=0;
     int idleCheck = 0;
     int gameOver=0;
@@ -649,6 +649,10 @@ void firstComeFirstServed(char **keyWord)
     listNode *root;
     root = (struct node *) malloc(sizeof(struct node));
     root=NULL;
+
+    listNode *rockRoot;
+    rockRoot = (struct node *) malloc(sizeof(struct node));
+    rockRoot=NULL;
 
     //temp->next=NULL;
 
@@ -664,8 +668,10 @@ void firstComeFirstServed(char **keyWord)
         strcpy(temp->processNumber,keyWord[(i*7)+10]);
         temp->arrivalTime = atoi(keyWord[(i*7)+12]);
         temp->burstTime = atoi(keyWord[(i*7)+14]);
+        temp->originalBurst = temp->burstTime;
         temp->next= root;
         root=temp;
+        rockRoot = temp;
     }
 
 
@@ -687,23 +693,28 @@ void firstComeFirstServed(char **keyWord)
             // Shows which process
             if(temp->arrivalTime==time)
             {
-                printf("Time %d: %s arrived\n", time, temp->processNumber);
+                fprintf(outfile, "Time %d: %s arrived\n", time, temp->processNumber);
             }
 
             if(selectP == 0)
             {
-                printf("Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
+                fprintf(outfile, "Time %d: %s selected (burst %d) \n", time, temp->processNumber, temp->burstTime);
                 selectP++;
             }
 
             if(temp->burstTime == 0)
             {
-                printf("Time %d: %s finished\n", time, temp->processNumber);
+                fprintf(outfile, "Time %d: %s finished\n", time, temp->processNumber);
+                temp->finishTime = time;
                 finProcs++;
                 selectP = 0;
 
+
+
                 listNode *newRoot;
                 newRoot = (struct node *) malloc(sizeof(struct node));
+
+                newRoot = rockRoot;
 
                 if(root->next != NULL)
                 {
@@ -723,8 +734,10 @@ void firstComeFirstServed(char **keyWord)
 
         if(finProcs == processCount && time < runTime)
         {
-            printf("Time %d: IDLE\n",time);
+            fprintf(outfile, "Time %d: IDLE\n",time);
         }
+
+
 
         if(temp->burstTime > 0)
             temp->burstTime--;
@@ -735,7 +748,22 @@ void firstComeFirstServed(char **keyWord)
 
     time--;
     if(time <= runTime)
-        printf("Finished at time %d\n", time);
+    {
+        fprintf(outfile, "Finished at time %d\n\n", time);
+
+        sortListByProcNumber(rockRoot);
+
+        while(rockRoot)
+        {
+            int wait = (rockRoot->finishTime - rockRoot->arrivalTime - rockRoot->originalBurst);
+            int turnaround = (rockRoot->finishTime - rockRoot->arrivalTime);
+
+            fprintf(outfile, "%s wait %d turnaround %d\n",rockRoot->processNumber,wait,turnaround);
+
+            rockRoot = rockRoot->next;
+        }
+
+    }
 
 
 }
